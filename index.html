@@ -362,10 +362,7 @@ document.addEventListener('mousemove',e=>{
 
 document.addEventListener('pointerlockchange',()=>{
   pointerLocked=!!document.pointerLockElement;
-  if(!touchMode&&!pointerLocked&&!isPaused){
-    isPaused=true;
-    document.getElementById('pauseMsg').style.display='block';
-  }
+  if(!touchMode&&!pointerLocked&&!isPaused)setPaused(true);
 });
 
 // ─── Raycasting (Voxel DDA) ────────────────────────────────
@@ -645,9 +642,7 @@ function updateHighlight(){
 renderer.domElement.addEventListener('mousedown',e=>{
   if(touchMode)return;
   if(isPaused){
-    isPaused=false;
-    pauseMsg.style.display='none';
-    requestControl();
+    setPaused(false);
     return;
   }
   if(!pointerLocked){
@@ -676,24 +671,12 @@ document.getElementById('startBtn').addEventListener('click',()=>{
 
 pauseMsg.addEventListener('click',()=>{
   if(isPaused){
-    isPaused=false;
-    pauseMsg.style.display='none';
-    requestControl();
+    setPaused(false);
   }
 });
 
 document.addEventListener('keydown',e=>{
-  if(e.code==='Escape'){
-    if(!isPaused){
-      isPaused=true;
-      pauseMsg.style.display='block';
-      document.exitPointerLock();
-    }else{
-      isPaused=false;
-      pauseMsg.style.display='none';
-      requestControl();
-    }
-  }
+  if(e.code==='Escape'&&!e.repeat&&overlay.classList.contains('hidden'))setPaused(!isPaused);
 });
 
 // Pointer input: independent pointers allow moving, looking, and jumping together.
