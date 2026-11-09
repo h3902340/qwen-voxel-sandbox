@@ -1,0 +1,7 @@
+*
+!/.gitignore
+!/.nojekyll
+!/index.html
+!/three.module.js
+!/README.md
+!/THIRD_PARTY_NOTICES.md
