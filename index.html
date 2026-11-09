@@ -133,7 +133,7 @@ const treeNoise=new SimplexNoise(67890);
 function generateWorld(){
   // Base terrain
   for(let x=0;x<WW;x++){
-    for(let z=0;z<WD;z++){
+    for(let z=0;z<WH;z++){
       const h=Math.floor((noise.fbm(x*0.02,z*0.02,5)*0.5+0.5)*20)+8;
       const waterLevel=14;
       for(let y=0;y<WD;y++){
@@ -147,7 +147,7 @@ function generateWorld(){
   }
   // Trees
   for(let x=3;x<WW-3;x+=2){
-    for(let z=3;z<WD-3;z+=2){
+    for(let z=3;z<WH-3;z+=2){
       const tVal=treeNoise.fbm(x*0.08,z*0.08,3);
       if(tVal>0.35){
         // Find surface
@@ -166,7 +166,7 @@ function generateWorld(){
             for(let lz=-r;lz<=r;lz++){
               if(lx===0&&lz===0&&ly<leafTop+2)continue;
               const nx=x+lx,nz=z+lz;
-              if(nx>=0&&nx<WW&&nz>=0&&nz<WD&&ly<WD){
+              if(nx>=0&&nx<WW&&nz>=0&&nz<WH&&ly<WD){
                 if(getBlock(nx,ly,nz)===AIR)setBlock(nx,ly,nz,LEAVES);
               }
             }
@@ -216,6 +216,7 @@ const chunkGeoCache=new Map();
 function getChunkKey(cx,cz){return cx+','+cz;}
 
 function buildChunkMesh(cx,cz){
+  if(cx<0||cz<0||cx>=Math.ceil(WW/CHUNK_W)||cz>=Math.ceil(WH/CHUNK_W))return;
   const key=getChunkKey(cx,cz);
   if(chunkMeshes.has(key)&&!chunkMeshes.get(key).dirty)return;
   
@@ -224,7 +225,7 @@ function buildChunkMesh(cx,cz){
   let vertCount=0;
   
   for(let x=ox;x<ox+CHUNK_W&&x<WW;x++){
-    for(let z=oz;z<oz+CHUNK_W&&z<WD;z++){
+    for(let z=oz;z<oz+CHUNK_W&&z<WH;z++){
       for(let y=0;y<WD;y++){
         const b=getBlock(x,y,z);
         if(b===AIR)continue;
@@ -290,7 +291,7 @@ function buildChunkMesh(cx,cz){
 function rebuildAllChunks(){
   for(const entry of chunkMeshes.values()){if(entry.mesh){scene.remove(entry.mesh);entry.mesh.geometry.dispose();entry.mesh.material.dispose();}}
   chunkMeshes.clear();
-  const numCX=Math.ceil(WW/CHUNK_W),numCZ=Math.ceil(WD/CHUNK_W);
+  const numCX=Math.ceil(WW/CHUNK_W),numCZ=Math.ceil(WH/CHUNK_W);
   for(let cx=0;cx<numCX;cx++){
     for(let cz=0;cz<numCZ;cz++){
       buildChunkMesh(cx,cz);
@@ -308,6 +309,7 @@ function rebuildAffectedChunks(x,y,z){
   const cx=Math.floor(x/CHUNK_W),cz=Math.floor(z/CHUNK_W);
   for(let dx=-1;dx<=1;dx++){
     for(let dz=-1;dz<=1;dz++){
+      markChunkDirty(cx+dx,cz+dz);
       buildChunkMesh(cx+dx,cz+dz);
     }
   }
@@ -315,7 +317,7 @@ function rebuildAffectedChunks(x,y,z){
 
 // ─── Player State ───────────────────────────────────────────
 const player={
-  x:WW/2,y:WD+10,z:WD/2,
+  x:WW/2,y:WD+10,z:WH/2,
   vx:0,vy:0,vz:0,
   yaw:0,pitch:0,
   onGround:false,
@@ -324,7 +326,7 @@ const player={
 
 // Find spawn point above terrain
 function findSpawn(){
-  const cx=Math.floor(WW/2),cz=Math.floor(WD/2);
+  const cx=Math.floor(WW/2),cz=Math.floor(WH/2);
   for(let y=WD-1;y>=0;y--){
     if(getBlock(cx,y,cz)!==AIR&&getBlock(cx,y,cz)!==WATER){
       player.x=cx+0.5;player.y=y+3;player.z=cz+0.5;
@@ -524,7 +526,7 @@ function updatePlayer(dt){
   if(player.x<1)player.x=1;
   if(player.x>WW-1)player.x=WW-1;
   if(player.z<1)player.z=1;
-  if(player.z>WD-1)player.z=WD-1;
+  if(player.z>WH-1)player.z=WH-1;
 }
 
 // ─── Hotbar UI ──────────────────────────────────────────────
